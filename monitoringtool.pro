@@ -19,7 +19,7 @@ FORMS += \
     settingsdialog.ui
 
 RESOURCES += \
-    terminal.qrc
+    monitoringtool.qrc
 
 target.path = $$[QT_INSTALL_EXAMPLES]/serialport/terminal
 INSTALLS += target

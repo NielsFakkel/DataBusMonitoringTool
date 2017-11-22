@@ -52,8 +52,10 @@
 #include "console.h"
 
 #include <QScrollBar>
-
+#include <QRegularExpression>
 #include <QtCore/QDebug>
+
+QString s_data;
 
 Console::Console(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -69,8 +71,15 @@ Console::Console(QWidget *parent)
 
 void Console::putData(const QByteArray &data)
 {
-    insertPlainText(QString(data));
-
+    s_data.append(QString(data));
+    insertPlainText(s_data);
+    QRegularExpression re("\^(?<message>\\w\\w\\w\\w\\w\\w\\w\\w)(?<crc>\\w\\w)$");
+    QRegularExpressionMatch match = re.match(s_data);
+    if (match.hasMatch()) {
+        QString message = match.captured("message");
+        QString crc = match.captured("crc");
+        insertPlainText("/n"+message+crc);
+    }
     QScrollBar *bar = verticalScrollBar();
     bar->setValue(bar->maximum());
 }
