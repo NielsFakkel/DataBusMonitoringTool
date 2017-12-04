@@ -67,6 +67,8 @@ public:
     void putData(const QByteArray &data);
 
     void setLocalEchoEnabled(bool set);
+    bool save();
+    bool saveAs();
 
 protected:
     void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
@@ -76,6 +78,12 @@ protected:
 
 private:
     bool localEchoEnabled;
+    bool saveFile(const QString &fileName);
+    void setCurrentFile(const QString &fileName);
+//    QString strippedName(const QString &fullFileName);
+
+//    QPlainTextEdit *textEdit;
+    QString curFile;
 
 };
 

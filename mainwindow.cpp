@@ -182,9 +182,11 @@ void MainWindow::initActionsConnections()
     connect(ui->actionClear, &QAction::triggered, console, &Console::clear);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::about);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
+    connect(ui->actionSave, &QAction::triggered, console, &Console::save);
 }
 
 void MainWindow::showStatusMessage(const QString &message)
 {
     status->setText(message);
 }
+

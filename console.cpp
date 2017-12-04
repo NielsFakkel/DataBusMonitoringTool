@@ -50,7 +50,8 @@
 ****************************************************************************/
 
 #include "console.h"
-
+#include <QtWidgets>
+#include <QByteArray>
 #include <QScrollBar>
 #include <QRegularExpression>
 #include <QtCore/QDebug>
@@ -72,17 +73,23 @@ Console::Console(QWidget *parent)
 void Console::putData(const QByteArray &data)
 {
     s_data.append(QString(data));
-    insertPlainText(s_data);
-    QRegularExpression re("\^(?<message>\\w\\w\\w\\w\\w\\w\\w\\w)(?<crc>\\w\\w)$");
-    QRegularExpressionMatch match = re.match(s_data);
-    if (match.hasMatch()) {
+    //insertPlainText(data);
+    QRegularExpression re("\b(?<message>........)(?<crc>..)");
+    QRegularExpressionMatchIterator i = re.globalMatch(s_data);
+    while (i.hasNext()) {
+        QRegularExpressionMatch match = i.next();
         QString message = match.captured("message");
+        QByteArray message_array = "0108"+message.toUtf8();
         QString crc = match.captured("crc");
-        insertPlainText("/n"+message+crc);
+        quint16 crc16= qChecksum(message_array.data(),message_array.length());
+        QString crc16_s = QString().number(crc16, 16);
+        insertPlainText("\n Message \t"+message_array+"\t crc \t"+crc+"\t crc-check \t"+crc16_s);
     }
+
     QScrollBar *bar = verticalScrollBar();
     bar->setValue(bar->maximum());
 }
+
 
 void Console::setLocalEchoEnabled(bool set)
 {
@@ -119,4 +126,64 @@ void Console::mouseDoubleClickEvent(QMouseEvent *e)
 void Console::contextMenuEvent(QContextMenuEvent *e)
 {
     Q_UNUSED(e)
+}
+
+bool Console::save()
+//! [9] //! [10]
+{
+    if (curFile.isEmpty()) {
+        return saveAs();
+    } else {
+        return saveFile(curFile);
+    }
+}
+//! [10]
+
+//! [11]
+bool Console::saveAs()
+//! [11] //! [12]
+{
+    QFileDialog dialog(this);
+    dialog.setWindowModality(Qt::WindowModal);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    if (dialog.exec() != QDialog::Accepted)
+        return false;
+    return saveFile(dialog.selectedFiles().first());
+}
+bool Console::saveFile(const QString &fileName)
+//! [44] //! [45]
+{
+    QFile file(fileName);
+    if (!file.open(QFile::WriteOnly | QFile::Text)) {
+        QMessageBox::warning(this, tr("Application"),
+                             tr("Cannot write file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName),
+                                  file.errorString()));
+        return false;
+    }
+
+    QTextStream out(&file);
+#ifndef QT_NO_CURSOR
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+#endif
+    out << toPlainText();
+#ifndef QT_NO_CURSOR
+    QApplication::restoreOverrideCursor();
+#endif
+
+    setCurrentFile(fileName);
+//    statusBar()->showMessage(tr("File saved"), 2000);
+    return true;
+}
+void Console::setCurrentFile(const QString &fileName)
+//! [46] //! [47]
+{
+    curFile = fileName;
+    document()->setModified(false);
+    setWindowModified(false);
+
+    QString shownName = curFile;
+    if (curFile.isEmpty())
+        shownName = "untitled.txt";
+    setWindowFilePath(shownName);
 }
