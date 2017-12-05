@@ -80,6 +80,8 @@ private:
     bool localEchoEnabled;
     bool saveFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
+    quint16 CRC(uint16_t crc1, uint8_t data, uint16_t poly);
+    unsigned short Calculate_CRC_CCITT(const unsigned char* buffer, int size);
 //    QString strippedName(const QString &fullFileName);
 
 //    QPlainTextEdit *textEdit;
