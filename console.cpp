@@ -57,7 +57,7 @@
 #include <QtCore/QDebug>
 #include <QDebug>
 
-QString s_data;
+QByteArray buffer;
 
 Console::Console(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -73,19 +73,26 @@ Console::Console(QWidget *parent)
 
 void Console::putData(const QByteArray &data)
 {
-    for (int i = 0; i < data.length(); i++)
-    {
-        int size = data[i+1];
+    buffer.append(data);
+    while (!QByteArray(buffer).isEmpty()) {
+        int size = buffer[1];
         qDebug() << "size" << size;
-        if (size>0 and size<data.length()) {
-            unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(data.mid(i, size+2).data()), size+2);
+        if (size>0 and size<buffer.length()) {
+            unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(buffer.mid(0, size+2).data()), size+2);
             QByteArray calc_crc((const char*)&crc16, sizeof(crc16));
             qDebug() << "calc_crc" << calc_crc;
-            QByteArray sent_crc = data.mid(size+i+2,2).data();
+            QByteArray sent_crc = buffer.mid(size+2,2).data();
             qDebug() << "sent_crc" << sent_crc;
             if (calc_crc==sent_crc) {
                 qDebug() << "Validated message";
+                buffer.remove(0,size);
+            } else {
+                buffer.remove(0, 1);
             }
+        } else if (size>buffer.length()) {
+            break;
+        } else {
+            buffer.remove(0,1);
         }
     }
 
