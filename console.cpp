@@ -55,6 +55,7 @@
 #include <QScrollBar>
 #include <QRegularExpression>
 #include <QtCore/QDebug>
+#include <QDebug>
 
 QString s_data;
 
@@ -72,51 +73,52 @@ Console::Console(QWidget *parent)
 
 void Console::putData(const QByteArray &data)
 {
-    s_data.append(QString(data));
-
-    //insertPlainText(data);
-    QRegularExpression re("\b(?<message>........)(?<crc>..)");
-    QRegularExpressionMatchIterator i = re.globalMatch(s_data);
-    while (i.hasNext()) {
-        uint16_t val = 0xFFFF;
-        QRegularExpressionMatch match = i.next();
-        QString message = match.captured("message");
-        QByteArray message_array = "\x01\b"+message.toUtf8();
-        QString crc = match.captured("crc");
-        QByteArray crc_array = crc.toUtf8();
-        for (int index = 0; index < message.length(); index++)
-            {
-//                crc.newChar(temp[index]);
-                val = CRC(val, (uint8_t)message_array[index], 0x1021);
-//                insertPlainText(QString::number(val));
+    for (int i = 0; i < data.length(); i++)
+    {
+        int size = data[i+1];
+        qDebug() << "size" << size;
+        if (size>0 and size<data.length()) {
+            unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(data.mid(i, size+2).data()), size+2);
+            QByteArray calc_crc((const char*)&crc16, sizeof(crc16));
+            qDebug() << "calc_crc" << calc_crc;
+            QByteArray sent_crc = data.mid(size+i+2,2).data();
+            qDebug() << "sent_crc" << sent_crc;
+            if (calc_crc==sent_crc) {
+                qDebug() << "Validated message";
             }
-//        quint16 crc16 = qChecksum(message_array.data(),message_array.length());
-        unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(message_array.data()), message_array.length());
-        QByteArray crc16_s((const char*)&crc16, sizeof(crc16));
-        insertPlainText("\n Message \t"+message_array+"\t crc \t"+crc_array.toHex()+"\t crc-check \t"+crc16_s.toHex());
+        }
     }
 
-    QScrollBar *bar = verticalScrollBar();
-    bar->setValue(bar->maximum());
+
+//    s_data.append(QString(data));
+
+
+    insertPlainText(data);
+//    QRegularExpression re("\b(?<message>........)(?<crc>..)");
+//    QRegularExpressionMatchIterator i = re.globalMatch(s_data);
+//    while (i.hasNext()) {
+//        uint16_t val = 0xFFFF;
+//        QRegularExpressionMatch match = i.next();
+//        QString message = match.captured("message");
+//        QByteArray message_array = "\x01\b"+message.toUtf8();
+//        QString crc = match.captured("crc");
+//        QByteArray crc_array = crc.toUtf8();
+//        for (int index = 0; index < message.length(); index++)
+//            {
+////                crc.newChar(temp[index]);
+//                val = CRC(val, (uint8_t)message_array[index], 0x1021);
+////                insertPlainText(QString::number(val));
+//            }
+////        quint16 crc16 = qChecksum(message_array.data(),message_array.length());
+//        unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(message_array.data()), message_array.length());
+//        QByteArray crc16_s((const char*)&crc16, sizeof(crc16));
+//        insertPlainText("\n Message \t"+message_array+"\t crc \t"+crc_array.toHex()+"\t crc-check \t"+crc16_s.toHex());
+//    }
+
+//    QScrollBar *bar = verticalScrollBar();
+//    bar->setValue(bar->maximum());
 }
 
-quint16 Console::CRC(uint16_t crc1, uint8_t data, uint16_t poly)
-{
-  for (unsigned char i = 0; i < 8; i++)
-  {
-    if (((( crc1 & 0x8000) >> 8) ^ (data & 0x80)) != 0)
-    {
-      crc1 <<= 1;
-      crc1 ^= poly;
-    }
-    else
-    {
-      crc1 <<= 1;
-    }
-    data <<= 1;
-  }
-  return crc1;
-}
 static const unsigned short CRC_CCITT_TABLE[256] =
 {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
