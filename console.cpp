@@ -76,24 +76,26 @@ void Console::putData(const QByteArray &data)
     buffer.append(data);
     while (!QByteArray(buffer).isEmpty()) {
         qDebug() << buffer;
-        int size = buffer[1];
+        uint size = (unsigned char)buffer[1];
         qDebug() << "size" << size;
-        if (size>0 and (size+2)<=buffer.length()) {
+        if ((size+4)<=buffer.length()) {
             unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(buffer.mid(0, size+2).data()), size+2);
             QByteArray calc_crc((const char*)&crc16, sizeof(crc16));
             qDebug() << "calc_crc" << calc_crc;
             QByteArray sent_crc = buffer.mid(size+2,2).data();
             qDebug() << "sent_crc" << sent_crc;
             if (calc_crc==sent_crc) {
-                qDebug() << "Validated message";
+                qDebug() << "Validated message" << buffer.mid(2,size) << "address" << buffer.mid(0,1);
                 buffer.remove(0,size+4);
             } else {
                 buffer.remove(0, 1);
+                qDebug() << "no message";
             }
         } else if ((size+2)>buffer.length()) {
             break;
         } else {
             buffer.remove(0,1);
+            qDebug() << "no message";
         }
     }
 
