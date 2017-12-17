@@ -1,55 +1,5 @@
-/****************************************************************************
-**
-** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
-** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the QtSerialPort module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
-
 #include "console.h"
+#include "ui_console.h"
 #include <QtWidgets>
 #include <QByteArray>
 #include <QScrollBar>
@@ -59,16 +9,17 @@
 
 QByteArray buffer;
 
-Console::Console(QWidget *parent)
-    : QPlainTextEdit(parent)
-    , localEchoEnabled(false)
+
+Console::Console(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::Console)
 {
-    document()->setMaximumBlockCount(100);
+    ui->setupUi(this);
+    ui->plainTextEdit->document()->setMaximumBlockCount(100);
     QPalette p = palette();
     p.setColor(QPalette::Base, Qt::black);
     p.setColor(QPalette::Text, Qt::green);
     setPalette(p);
-
 }
 
 void Console::putData(const QByteArray &data)
@@ -77,8 +28,8 @@ void Console::putData(const QByteArray &data)
     while (!QByteArray(buffer).isEmpty()) {
         qDebug() << buffer;
         uint size = (unsigned char)buffer[1];
-        qDebug() << "size" << size;
-        if ((size+4)<=buffer.length()) {
+        qDebug() << "size" << size << (uint)buffer.length();
+        if ((size+4)<=(uint)buffer.length()) {
             unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(buffer.mid(0, size+2).data()), size+2);
             QByteArray calc_crc((const char*)&crc16, sizeof(crc16));
             qDebug() << "calc_crc" << calc_crc;
@@ -86,47 +37,20 @@ void Console::putData(const QByteArray &data)
             qDebug() << "sent_crc" << sent_crc;
             if (calc_crc==sent_crc) {
                 qDebug() << "Validated message" << buffer.mid(2,size) << "address" << buffer.mid(0,1);
+
                 buffer.remove(0,size+4);
             } else {
                 buffer.remove(0, 1);
                 qDebug() << "no message";
             }
-        } else if ((size+2)>buffer.length()) {
+        } else if ((size+2)>(uint)buffer.length()) {
             break;
         } else {
             buffer.remove(0,1);
             qDebug() << "no message";
         }
     }
-
-
-//    s_data.append(QString(data));
-
-
-    insertPlainText(data);
-//    QRegularExpression re("\b(?<message>........)(?<crc>..)");
-//    QRegularExpressionMatchIterator i = re.globalMatch(s_data);
-//    while (i.hasNext()) {
-//        uint16_t val = 0xFFFF;
-//        QRegularExpressionMatch match = i.next();
-//        QString message = match.captured("message");
-//        QByteArray message_array = "\x01\b"+message.toUtf8();
-//        QString crc = match.captured("crc");
-//        QByteArray crc_array = crc.toUtf8();
-//        for (int index = 0; index < message.length(); index++)
-//            {
-////                crc.newChar(temp[index]);
-//                val = CRC(val, (uint8_t)message_array[index], 0x1021);
-////                insertPlainText(QString::number(val));
-//            }
-////        quint16 crc16 = qChecksum(message_array.data(),message_array.length());
-//        unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(message_array.data()), message_array.length());
-//        QByteArray crc16_s((const char*)&crc16, sizeof(crc16));
-//        insertPlainText("\n Message \t"+message_array+"\t crc \t"+crc_array.toHex()+"\t crc-check \t"+crc16_s.toHex());
-//    }
-
-//    QScrollBar *bar = verticalScrollBar();
-//    bar->setValue(bar->maximum());
+    ui->plainTextEdit->insertPlainText(data);
 }
 
 static const unsigned short CRC_CCITT_TABLE[256] =
@@ -183,20 +107,26 @@ void Console::setLocalEchoEnabled(bool set)
     localEchoEnabled = set;
 }
 
+void Console::clear()
+{
+    ui->plainTextEdit->clear();
+    buffer = "";
+}
+
 void Console::keyPressEvent(QKeyEvent *e)
 {
-    switch (e->key()) {
-    case Qt::Key_Backspace:
-    case Qt::Key_Left:
-    case Qt::Key_Right:
-    case Qt::Key_Up:
-    case Qt::Key_Down:
-        break;
-    default:
-        if (localEchoEnabled)
-            QPlainTextEdit::keyPressEvent(e);
-        emit getData(e->text().toLocal8Bit());
-    }
+//    switch (e->key()) {
+//    case Qt::Key_Backspace:
+//    case Qt::Key_Left:
+//    case Qt::Key_Right:
+//    case Qt::Key_Up:
+//    case Qt::Key_Down:
+//        break;
+//    default:
+//        if (localEchoEnabled)
+//            ui->plainTextEdit->QPlainTextEdit::keyPressEvent(e);
+//        emit getData(e->text().toLocal8Bit());
+//    }
 }
 
 void Console::mousePressEvent(QMouseEvent *e)
@@ -253,7 +183,7 @@ bool Console::saveFile(const QString &fileName)
 #ifndef QT_NO_CURSOR
     QApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
-    out << toPlainText();
+    out << ui->plainTextEdit->toPlainText();
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
@@ -266,11 +196,16 @@ void Console::setCurrentFile(const QString &fileName)
 //! [46] //! [47]
 {
     curFile = fileName;
-    document()->setModified(false);
+    ui->plainTextEdit->document()->setModified(false);
     setWindowModified(false);
 
     QString shownName = curFile;
     if (curFile.isEmpty())
         shownName = "untitled.txt";
     setWindowFilePath(shownName);
+}
+
+Console::~Console()
+{
+    delete ui;
 }

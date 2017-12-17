@@ -16,7 +16,8 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui \
-    settingsdialog.ui
+    settingsdialog.ui \
+    console.ui
 
 RESOURCES += \
     monitoringtool.qrc
