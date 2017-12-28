@@ -1,4 +1,6 @@
-QT += widgets serialport
+QT += \
+    widgets serialport \
+    sql
 
 TARGET = terminal
 TEMPLATE = app

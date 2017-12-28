@@ -1,6 +1,6 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
-
+#include <QListWidgetItem>
 #include <QWidget>
 
 namespace Ui {
@@ -24,10 +24,13 @@ public:
     bool saveAs();
 
 protected:
-    void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
+//    void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
     void mouseDoubleClickEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
     void contextMenuEvent(QContextMenuEvent *e) Q_DECL_OVERRIDE;
+
+private slots:
+    void on_listWidget_itemClicked(QListWidgetItem *item);
 
 private:
     Ui::Console *ui;

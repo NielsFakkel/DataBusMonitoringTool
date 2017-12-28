@@ -6,9 +6,9 @@
 #include <QRegularExpression>
 #include <QtCore/QDebug>
 #include <QDebug>
-
+#include <QSqlTableModel>
+#include <QListWidgetItem>
 QByteArray buffer;
-
 
 Console::Console(QWidget *parent) :
     QWidget(parent),
@@ -19,7 +19,7 @@ Console::Console(QWidget *parent) :
     QPalette p = palette();
     p.setColor(QPalette::Base, Qt::black);
     p.setColor(QPalette::Text, Qt::green);
-    setPalette(p);
+    ui->plainTextEdit->setPalette(p);
 }
 
 void Console::putData(const QByteArray &data)
@@ -27,23 +27,26 @@ void Console::putData(const QByteArray &data)
     buffer.append(data);
     while (!QByteArray(buffer).isEmpty()) {
         qDebug() << buffer;
-        uint size = (unsigned char)buffer[1];
-        qDebug() << "size" << size << (uint)buffer.length();
-        if ((size+4)<=(uint)buffer.length()) {
+        uint size = (unsigned char)buffer[0];
+        qDebug() << "size" << size << "buffersize" << buffer.length();
+        if (buffer.length()>=(size+4)) {
             unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(buffer.mid(0, size+2).data()), size+2);
             QByteArray calc_crc((const char*)&crc16, sizeof(crc16));
             qDebug() << "calc_crc" << calc_crc;
-            QByteArray sent_crc = buffer.mid(size+2,2).data();
+            QByteArray sent_crc = buffer.mid(size+2,2);
             qDebug() << "sent_crc" << sent_crc;
             if (calc_crc==sent_crc) {
                 qDebug() << "Validated message" << buffer.mid(2,size) << "address" << buffer.mid(0,1);
-
+                QListWidgetItem *item = new QListWidgetItem();
+                item->setText(buffer.mid(2,size));
+                item->setStatusTip("Address:"+buffer.mid(0,1)+"Size:"+buffer.mid(0,0)+"Message:"+buffer.mid(2,size));
+                ui->listWidget->addItem(item);
                 buffer.remove(0,size+4);
             } else {
                 buffer.remove(0, 1);
                 qDebug() << "no message";
             }
-        } else if ((size+2)>(uint)buffer.length()) {
+        } else if (buffer.length()<(size+4)) {
             break;
         } else {
             buffer.remove(0,1);
@@ -113,8 +116,8 @@ void Console::clear()
     buffer = "";
 }
 
-void Console::keyPressEvent(QKeyEvent *e)
-{
+//void Console::keyPressEvent(QKeyEvent *e)
+//{
 //    switch (e->key()) {
 //    case Qt::Key_Backspace:
 //    case Qt::Key_Left:
@@ -127,7 +130,7 @@ void Console::keyPressEvent(QKeyEvent *e)
 //            ui->plainTextEdit->QPlainTextEdit::keyPressEvent(e);
 //        emit getData(e->text().toLocal8Bit());
 //    }
-}
+//}
 
 void Console::mousePressEvent(QMouseEvent *e)
 {
@@ -208,4 +211,9 @@ void Console::setCurrentFile(const QString &fileName)
 Console::~Console()
 {
     delete ui;
+}
+
+void Console::on_listWidget_itemClicked(QListWidgetItem *item)
+{
+    ui->textBrowser->setText(item->statusTip());
 }
