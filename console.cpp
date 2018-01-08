@@ -8,6 +8,8 @@
 #include <QDebug>
 #include <QSqlTableModel>
 #include <QListWidgetItem>
+#include <QDateTime>
+
 QByteArray buffer;
 
 Console::Console(QWidget *parent) :
@@ -27,7 +29,7 @@ void Console::putData(const QByteArray &data)
     buffer.append(data);
     while (!QByteArray(buffer).isEmpty()) {
         qDebug() << buffer;
-        uint size = (unsigned char)buffer[0];
+        uint size = (unsigned char)buffer[1];
         qDebug() << "size" << size << "buffersize" << buffer.length();
         if (buffer.length()>=(size+4)) {
             unsigned short crc16 = Calculate_CRC_CCITT(reinterpret_cast<const unsigned char*>(buffer.mid(0, size+2).data()), size+2);
@@ -39,8 +41,10 @@ void Console::putData(const QByteArray &data)
                 qDebug() << "Validated message" << buffer.mid(2,size) << "address" << buffer.mid(0,1);
                 QListWidgetItem *item = new QListWidgetItem();
                 item->setText(buffer.mid(2,size));
-                item->setStatusTip("Address:"+buffer.mid(0,1)+"Size:"+buffer.mid(0,0)+"Message:"+buffer.mid(2,size));
+                QDateTime local(QDateTime::currentDateTime());
+                item->setStatusTip("Date:"+local.toString("MM/dd/yyyy")+"\nTime:"+local.toString("hh:mm:ss.z")+"\nAddress:"+buffer.mid(0,1).toHex()+"\nSize:"+buffer.mid(1,1).toHex()+"\nMessage:"+buffer.mid(2,size)+"/n");
                 ui->listWidget->addItem(item);
+                ui->listWidget->scrollToBottom();
                 buffer.remove(0,size+4);
             } else {
                 buffer.remove(0, 1);
@@ -183,13 +187,18 @@ bool Console::saveFile(const QString &fileName)
     }
 
     QTextStream out(&file);
-#ifndef QT_NO_CURSOR
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-#endif
-    out << ui->plainTextEdit->toPlainText();
-#ifndef QT_NO_CURSOR
-    QApplication::restoreOverrideCursor();
-#endif
+//#ifndef QT_NO_CURSOR
+//    QApplication::setOverrideCursor(Qt::WaitCursor);
+//#endif
+//    out << ui->plainTextEdit->toPlainText();
+//#ifndef QT_NO_CURSOR
+//    QApplication::restoreOverrideCursor();
+//#endif
+    for(int i = 0; i < ui->listWidget->count(); ++i)
+    {
+        QListWidgetItem* item = ui->listWidget->item(i);
+        out << item->statusTip();
+    }
 
     setCurrentFile(fileName);
 //    statusBar()->showMessage(tr("File saved"), 2000);
@@ -199,7 +208,7 @@ void Console::setCurrentFile(const QString &fileName)
 //! [46] //! [47]
 {
     curFile = fileName;
-    ui->plainTextEdit->document()->setModified(false);
+//    ui->plainTextEdit->document()->setModified(false);
     setWindowModified(false);
 
     QString shownName = curFile;
