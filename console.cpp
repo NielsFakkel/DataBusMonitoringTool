@@ -42,7 +42,7 @@ void Console::putData(const QByteArray &data)
                 QListWidgetItem *item = new QListWidgetItem();
                 item->setText(buffer.mid(2,size));
                 QDateTime local(QDateTime::currentDateTime());
-                item->setStatusTip("Date:"+local.toString("MM/dd/yyyy")+"\nTime:"+local.toString("hh:mm:ss.z")+"\nAddress:"+buffer.mid(0,1).toHex()+"\nSize:"+buffer.mid(1,1).toHex()+"\nMessage:"+buffer.mid(2,size)+"/n");
+                item->setStatusTip("Date:"+local.toString("MM/dd/yyyy")+"\nTime:"+local.toString("hh:mm:ss.z")+"\nAddress:"+buffer.mid(0,1).toHex()+"\nSize:"+buffer.mid(1,1).toHex()+"\nMessage:"+buffer.mid(2,size)+"\n");
                 ui->listWidget->addItem(item);
                 ui->listWidget->scrollToBottom();
                 buffer.remove(0,size+4);
