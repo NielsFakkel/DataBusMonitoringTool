@@ -2,7 +2,9 @@ QT += \
     widgets serialport \
     sql
 
-TARGET = terminal
+RC_FILE = datamonitor.rc
+
+TARGET = databusmonitor
 TEMPLATE = app
 
 SOURCES += \
@@ -24,5 +26,9 @@ FORMS += \
 RESOURCES += \
     monitoringtool.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/serialport/terminal
+target.path = C:\Users\Niels\Documents\GITS\databusmonitor
 INSTALLS += target
+
+DISTFILES += \
+    tudelft.ico \
+    datamonitor.rc

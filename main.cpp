@@ -50,13 +50,19 @@
 ****************************************************************************/
 
 #include <QApplication>
+#include <QCoreApplication>
 
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
+
     QApplication a(argc, argv);
+    a.setOrganizationName("Data Bus Monitoring Tool");
+    a.setApplicationName("Data Bus Monitoring Tool");
+    a.setApplicationDisplayName("Data Bus Monitoring Tool");
     MainWindow w;
+
     w.show();
     return a.exec();
 }

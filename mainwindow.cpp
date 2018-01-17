@@ -142,10 +142,11 @@ void MainWindow::closeSerialPort()
 
 void MainWindow::about()
 {
-    QMessageBox::about(this, tr("About Simple Terminal"),
-                       tr("The <b>Simple Terminal</b> example demonstrates how to "
-                          "use the Qt Serial Port module in modern GUI applications "
-                          "using Qt, with a menu bar, toolbars, and a status bar."));
+    QMessageBox::about(this, tr("About Data Bus Monitoring Tool"),
+                       tr("The <b>Data Bus Monitoring Tool</b> shows all messages "
+                          "which are being send over the Data Bus. They can be stored "
+                          "in a log file. Each also contains information about date, "
+                          "time, address and length. "));
 }
 
 //! [6]
