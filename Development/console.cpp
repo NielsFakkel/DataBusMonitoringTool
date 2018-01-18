@@ -32,7 +32,6 @@ void Console::putData(const QByteArray &data)
     } else {
         ui->plainTextEdit->insertPlainText(data);
     }
-    ui->plainTextEdit->insertPlainText(data);
     ui->plainTextEdit->verticalScrollBar()->setValue(ui->plainTextEdit->verticalScrollBar()->maximum());
     while (!QByteArray(buffer).isEmpty()) {
         qDebug() << buffer;
@@ -53,8 +52,7 @@ void Console::putData(const QByteArray &data)
                     item->setStatusTip("Date:"+local.toString("MM/dd/yyyy")+", Time:"+local.toString("hh:mm:ss.z")+", Address:"+buffer.mid(0,1).toHex()+", Size:"+buffer.mid(1,1).toHex()+", Message:"+buffer.mid(2,size).toHex()+"\n");
                 } else {
                     item->setText(buffer.mid(2,size));
-                    bool ok;
-                    item->setStatusTip("Date:"+local.toString("MM/dd/yyyy")+", Time:"+local.toString("hh:mm:ss.z")+", Address:"+buffer.mid(0,1).toInt(&ok, 16)+", Size:"+buffer.mid(1,1).toInt(&ok, 16)+", Message:"+buffer.mid(2,size)+"\n");
+                    item->setStatusTip("Date:"+local.toString("MM/dd/yyyy")+", Time:"+local.toString("hh:mm:ss.z")+", Address:"+buffer.mid(0,1).toHex()+", Size:"+buffer.mid(1,1).toHex()+", Message:"+buffer.mid(2,size)+"\n");
                 }
                 ui->listWidget->addItem(item);
                 ui->listWidget->scrollToBottom();
